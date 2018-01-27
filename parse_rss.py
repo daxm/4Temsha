@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
-# from bs4 import BeautifulSoup
-# import requests
 import logging
 import feedparser
-import pprint
 
 # Logging Options
 LOGGING_LEVEL = 'INFO'
@@ -37,7 +34,6 @@ def cleanup_tags(data=''):
     return terms
 
 
-
 def main():
     # Get RSS feed and convert into dict
     rss_dict = feedparser.parse(RSS_URL)
@@ -46,6 +42,7 @@ def main():
     # Build a list of SQL statements in preparation for rebuild of SQL database.
     sql_statements = []
     all_tags = []
+    all_locations = []
     for entry in rss_dict['entries']:
         jobnumber = entry.get('jobnumber')
         link = entry.get('link')
@@ -60,6 +57,10 @@ def main():
             if tag not in all_tags:
                 all_tags.append(tag)
 
+        # Build a list of unique location values.
+        if location not in all_locations:
+            all_locations.append(location)
+
         sql_statements.append(
             "insert into DATABASE values ({}, {}, {}, {}, {}, {}, {});".format(jobnumber,
                                                                                link,
@@ -71,6 +72,8 @@ def main():
 
     # Add tags to DATABASE
     print(all_tags)
+    # Add locations to DATABASE
+    print(all_locations)
     # Add jobs to DATABASE TODO:(Need to reference tag PK instead of tag word.)
     print(sql_statements)
 
