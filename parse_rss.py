@@ -2,11 +2,33 @@
 
 import logging
 import feedparser
+import pymysql
+import userdata
 
 # Logging Options
 LOGGING_LEVEL = 'INFO'
 # RSS feed URL
 RSS_URL = 'http://infotechsourcing.crelate.com/portal/rss'
+
+# SQL statements to drop and create tables.
+drop_job2tags = "DROP TABLE IF EXISTS job2tags"
+drop_jobs = "DROP TABLE IF EXISTS jobs"
+
+create_job2tags = "CREATE TABLE `infotechsourcing`.`job2tags` ( `jobnumber` BIGINT UNSIGNED NOT NULL , " \
+              "`tag` TEXT CHARACTER SET utf8 COLLATE utf8_bin NOT NULL ) ENGINE = InnoDB;"
+create_jobs = "CREATE TABLE `infotechsourcing`.`jobs` ( `jobnumber` BIGINT UNSIGNED NOT NULL , " \
+              "`link` TEXT CHARACTER SET utf8 COLLATE utf8_bin NOT NULL , " \
+              "`published` TEXT  CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL , " \
+              "`summary` LONGTEXT  CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL , " \
+              "`title` TEXT  CHARACTER SET utf8 COLLATE utf8_bin NOT NULL , " \
+              "`location` TEXT  CHARACTER SET utf8 COLLATE utf8_bin NOT NULL , " \
+              "PRIMARY KEY (`jobnumber`)) ENGINE = InnoDB;"
+
+# SQL for inserting into job2tags
+insert_job2tags = """INSERT INTO job2tags values ("{}", "{}");"""
+
+# SQL for inserting into jobs
+insert_job = """INSERT INTO jobs values ("{}", "{}", "{}", "{}", "{}", "{}");"""
 
 
 def cleanup_published(data=''):
@@ -29,53 +51,42 @@ def cleanup_tags(data=''):
     # Some RSS entries don't have tags and will only have value "None".
     if data:
         for item in data:
-            terms.append(item.get('term'))
+            if item not in terms:
+                terms.append(item.get('term'))
 
     return terms
 
 
 def main():
-    # Get RSS feed and convert into dict
-    rss_dict = feedparser.parse(RSS_URL)
+    # Open database connection
+    with pymysql.connect("localhost", userdata.DB_USERNAME, userdata.DB_PASSWORD, userdata.DB, charset='utf8') as db:
+        # Delete the existing tables to clear out any old information.
+        db.execute(drop_job2tags)
+        db.execute(drop_jobs)
 
-    # The desired data is a list of dicts under the rss_dict['entries']
-    # Build a list of SQL statements in preparation for rebuild of SQL database.
-    sql_statements = []
-    all_tags = []
-    all_locations = []
-    for entry in rss_dict['entries']:
-        jobnumber = entry.get('jobnumber')
-        link = entry.get('link')
-        location = entry.get('location')
-        published = cleanup_published(data=entry.get('published'))
-        summary = entry.get('summary')
-        title = entry.get('title')
-        tags = cleanup_tags(data=entry.get('tags'))
+        # Recreate the tables.
+        db.execute(create_job2tags)
+        db.execute(create_jobs)
 
-        # Build a list of unique tag values.
-        for tag in tags:
-            if tag not in all_tags:
-                all_tags.append(tag)
+        # Get RSS feed and convert into dict
+        rss_dict = feedparser.parse(RSS_URL)
 
-        # Build a list of unique location values.
-        if location not in all_locations:
-            all_locations.append(location)
+        # The desired data is a list of dicts under the rss_dict['entries']
+        for entry in rss_dict['entries']:
+            jobnumber = pymysql.escape_string(entry.get('jobnumber'))
+            link = pymysql.escape_string(entry.get('link'))
+            location = pymysql.escape_string(entry.get('location'))
+            published = pymysql.escape_string(cleanup_published(data=entry.get('published')))
+            summary = pymysql.escape_string(entry.get('summary'))
+            title = pymysql.escape_string(entry.get('title'))
+            tags = cleanup_tags(data=entry.get('tags'))
 
-        sql_statements.append(
-            "insert into DATABASE values ({}, {}, {}, {}, {}, {}, {});".format(jobnumber,
-                                                                               link,
-                                                                               location,
-                                                                               published,
-                                                                               summary,
-                                                                               title,
-                                                                               tags))
+            # Add job2tag to db.
+            for tag in tags:
+                db.execute(insert_job2tags.format(jobnumber, pymysql.escape_string(tag)))
 
-    # Add tags to DATABASE
-    print(all_tags)
-    # Add locations to DATABASE
-    print(all_locations)
-    # Add jobs to DATABASE TODO:(Need to reference tag PK instead of tag word.)
-    print(sql_statements)
+            # Add job to db.
+            db.execute(insert_job.format(jobnumber, link, published, summary, title, location))
 
 
 if __name__ == '__main__':
