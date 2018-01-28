@@ -13,7 +13,6 @@ RSS_URL = 'http://infotechsourcing.crelate.com/portal/rss'
 # SQL statements to drop and create tables.
 drop_job2tags = "DROP TABLE IF EXISTS job2tags"
 drop_jobs = "DROP TABLE IF EXISTS jobs"
-
 create_job2tags = "CREATE TABLE `infotechsourcing`.`job2tags` ( `jobnumber` BIGINT UNSIGNED NOT NULL , " \
               "`tag` TEXT CHARACTER SET utf8 COLLATE utf8_bin NOT NULL ) ENGINE = InnoDB;"
 create_jobs = "CREATE TABLE `infotechsourcing`.`jobs` ( `jobnumber` BIGINT UNSIGNED NOT NULL , " \
@@ -29,6 +28,18 @@ insert_job2tags = """INSERT INTO job2tags values ("{}", "{}");"""
 
 # SQL for inserting into jobs
 insert_job = """INSERT INTO jobs values ("{}", "{}", "{}", "{}", "{}", "{}");"""
+
+"""
+# Other needed SQL statements not yet implemented.
+    SELECT DISTINCT location FROM jobs
+    SELECT COUNT(*) FROM jobs WHERE location='{}'
+    SELECT DISTINCT tag FROM job2tags
+    SELECT COUNT(DISTINCT tag) FROM job2tags
+    SELECT jobnumber, link, title, location, summary FROM `jobs`
+    SELECT jobnumber, link, title, location, summary FROM `jobs` WHERE jobnumber='{}'
+    SELECT jobnumber, link, title, location, summary FROM `jobs` WHERE location='{}'
+    SELECT jobs.jobnumber, link, title, location, summary FROM `jobs` LEFT JOIN job2tags ON jobs.jobnumber=job2tags.jobnumber WHERE tag='{}'
+"""
 
 
 def cleanup_published(data=''):
