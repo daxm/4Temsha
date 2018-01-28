@@ -4,9 +4,18 @@ import logging
 import feedparser
 import pymysql
 import userdata
+import re
+
+# Regex for identifying HTML tags.
+TAG_RE = re.compile(r'<[^>]+>')
+BLANKLINE_RE = re.compile(r'\s{2,}')
+
+# Number of characters of the summary to keep
+SUMMARY_CHARS = 500
 
 # Logging Options
 LOGGING_LEVEL = 'INFO'
+
 # RSS feed URL
 RSS_URL = 'http://infotechsourcing.crelate.com/portal/rss'
 
@@ -68,6 +77,15 @@ def cleanup_tags(data=''):
     return terms
 
 
+def remove_tags(text):
+    text = TAG_RE.sub('  ', text)
+    return BLANKLINE_RE.sub(' ', text)
+
+
+def cleanup_summary(data=''):
+    return remove_tags(data)[0:SUMMARY_CHARS]
+
+
 def main():
     # Open database connection
     with pymysql.connect("localhost", userdata.DB_USERNAME, userdata.DB_PASSWORD, userdata.DB, charset='utf8') as db:
@@ -88,7 +106,7 @@ def main():
             link = pymysql.escape_string(entry.get('link'))
             location = pymysql.escape_string(entry.get('location'))
             published = pymysql.escape_string(cleanup_published(data=entry.get('published')))
-            summary = pymysql.escape_string(entry.get('summary'))
+            summary = cleanup_summary(pymysql.escape_string(entry.get('summary')))
             title = pymysql.escape_string(entry.get('title'))
             tags = cleanup_tags(data=entry.get('tags'))
 
