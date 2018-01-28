@@ -13,14 +13,14 @@ RSS_URL = 'http://infotechsourcing.crelate.com/portal/rss'
 # SQL statements to drop and create tables.
 drop_job2tags = "DROP TABLE IF EXISTS job2tags"
 drop_jobs = "DROP TABLE IF EXISTS jobs"
-create_job2tags = "CREATE TABLE `infotechsourcing`.`job2tags` ( `jobnumber` BIGINT UNSIGNED NOT NULL , " \
+create_job2tags = "CREATE TABLE `job2tags` ( `jobnumber` BIGINT UNSIGNED NOT NULL , " \
               "`tag` TEXT CHARACTER SET utf8 COLLATE utf8_bin NOT NULL ) ENGINE = InnoDB;"
-create_jobs = "CREATE TABLE `infotechsourcing`.`jobs` ( `jobnumber` BIGINT UNSIGNED NOT NULL , " \
+create_jobs = "CREATE TABLE `jobs` ( `jobnumber` BIGINT UNSIGNED NOT NULL , " \
               "`link` TEXT CHARACTER SET utf8 COLLATE utf8_bin NOT NULL , " \
-              "`published` TEXT  CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL , " \
-              "`summary` LONGTEXT  CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL , " \
-              "`title` TEXT  CHARACTER SET utf8 COLLATE utf8_bin NOT NULL , " \
-              "`location` TEXT  CHARACTER SET utf8 COLLATE utf8_bin NOT NULL , " \
+              "`published` TEXT CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL , " \
+              "`summary` LONGTEXT CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL , " \
+              "`title` TEXT CHARACTER SET utf8 COLLATE utf8_bin NOT NULL , " \
+              "`location` TEXT CHARACTER SET utf8 COLLATE utf8_bin NOT NULL , " \
               "PRIMARY KEY (`jobnumber`)) ENGINE = InnoDB;"
 
 # SQL for inserting into job2tags
