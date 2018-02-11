@@ -1,1 +1,1 @@
-sudo docker rm -f infotechsourcing
+sudo docker stop mysql_db

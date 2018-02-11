@@ -47,7 +47,8 @@ insert_job = """INSERT INTO jobs values ("{}", "{}", "{}", "{}", "{}", "{}");"""
     SELECT jobnumber, link, title, location, summary FROM `jobs`
     SELECT jobnumber, link, title, location, summary FROM `jobs` WHERE jobnumber='{}'
     SELECT jobnumber, link, title, location, summary FROM `jobs` WHERE location='{}'
-    SELECT jobs.jobnumber, link, title, location, summary FROM `jobs` LEFT JOIN job2tags ON jobs.jobnumber=job2tags.jobnumber WHERE tag='{}'
+    SELECT jobs.jobnumber, link, title, location, summary FROM `jobs` LEFT JOIN job2tags ON \
+        jobs.jobnumber=job2tags.jobnumber WHERE tag='{}'
 """
 
 
@@ -88,7 +89,8 @@ def cleanup_summary(data=''):
 
 def main():
     # Open database connection
-    with pymysql.connect(userdata.DB_IP, userdata.DB_USERNAME, userdata.DB_PASSWORD, userdata.DB, charset='utf8') as db:
+    with pymysql.connect(host=userdata.DB_IP, port=userdata.DB_PORT, user=userdata.DB_USERNAME,
+                         password=userdata.DB_PASSWORD, db=userdata.DB, charset='utf8') as db:
         # Delete the existing tables to clear out any old information.
         db.execute(drop_job2tags)
         db.execute(drop_jobs)
@@ -102,7 +104,7 @@ def main():
 
         # The desired data is a list of dicts under the rss_dict['entries']
         for entry in rss_dict['entries']:
-            if entry.has_key('jobnumber'):
+            if 'jobnumber' in entry:
                 jobnumber = pymysql.escape_string(entry.get('jobnumber'))
                 link = pymysql.escape_string(entry.get('link'))
                 location = pymysql.escape_string(entry.get('location'))
