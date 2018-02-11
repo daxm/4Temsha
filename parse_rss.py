@@ -88,7 +88,7 @@ def cleanup_summary(data=''):
 
 def main():
     # Open database connection
-    with pymysql.connect("localhost", userdata.DB_USERNAME, userdata.DB_PASSWORD, userdata.DB, charset='utf8') as db:
+    with pymysql.connect(userdata.DB_IP, userdata.DB_USERNAME, userdata.DB_PASSWORD, userdata.DB, charset='utf8') as db:
         # Delete the existing tables to clear out any old information.
         db.execute(drop_job2tags)
         db.execute(drop_jobs)
@@ -102,20 +102,23 @@ def main():
 
         # The desired data is a list of dicts under the rss_dict['entries']
         for entry in rss_dict['entries']:
-            jobnumber = pymysql.escape_string(entry.get('jobnumber'))
-            link = pymysql.escape_string(entry.get('link'))
-            location = pymysql.escape_string(entry.get('location'))
-            published = pymysql.escape_string(cleanup_published(data=entry.get('published')))
-            summary = cleanup_summary(pymysql.escape_string(entry.get('summary')))
-            title = pymysql.escape_string(entry.get('title'))
-            tags = cleanup_tags(data=entry.get('tags'))
+            if entry.has_key('jobnumber'):
+                jobnumber = pymysql.escape_string(entry.get('jobnumber'))
+                link = pymysql.escape_string(entry.get('link'))
+                location = pymysql.escape_string(entry.get('location'))
+                published = pymysql.escape_string(cleanup_published(data=entry.get('published')))
+                summary = cleanup_summary(pymysql.escape_string(entry.get('summary')))
+                title = pymysql.escape_string(entry.get('title'))
+                tags = cleanup_tags(data=entry.get('tags'))
 
-            # Add job2tag to db.
-            for tag in tags:
-                db.execute(insert_job2tags.format(jobnumber, pymysql.escape_string(tag)))
+                # Add job2tag to db.
+                for tag in tags:
+                    db.execute(insert_job2tags.format(jobnumber, pymysql.escape_string(tag)))
 
-            # Add job to db.
-            db.execute(insert_job.format(jobnumber, link, published, summary, title, location))
+                # Add job to db.
+                db.execute(insert_job.format(jobnumber, link, published, summary, title, location))
+            else:
+                print("This RSS entry has no job number: {}".format(entry))
 
 
 if __name__ == '__main__':

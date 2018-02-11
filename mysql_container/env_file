@@ -1,0 +1,3 @@
+MYSQL_ROOT_HOST=%
+MYSQL_ROOT_PASSWORD=simple_stupid_password
+MYSQL_DATABASE=test_db_name
