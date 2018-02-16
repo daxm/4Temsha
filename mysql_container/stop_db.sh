@@ -1,1 +1,3 @@
-sudo docker stop mysql_db
+#!/usr/bin/env bash
+
+docker stop mysql_db
